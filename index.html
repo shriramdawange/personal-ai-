@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal AI Companion</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h2>My AI Companion</h2>
+            <input type="password" id="apiKeyInput" placeholder="Enter Hugging Face Token">
+        </header>
+
+        <div id="chatWindow" class="chat-window">
+            </div>
+
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="How are you feeling today?">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
