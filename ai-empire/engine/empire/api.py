@@ -14,6 +14,7 @@ from .db import (
     update_lead_status, update_project_status
 )
 from .orchestrator import Orchestrator
+from .llm import chat
 from .research import hunt_clients
 
 app = FastAPI(title="AI Empire Engine API", version="0.3.0", description="Local control API for the AI business worker")
@@ -84,6 +85,27 @@ def system_status(authorization: Optional[str] = Header(default=None)):
         "ollama": ollama,
         "database": database,
     }
+
+@app.post("/system/model-test")
+def model_test(authorization: Optional[str] = Header(default=None)):
+    """Run a tiny real inference to verify the configured local model responds."""
+    verify_access(authorization)
+    try:
+        response = chat(
+            "You are checking local model readiness. Follow the user's exact instruction.",
+            'Reply with exactly this token and nothing else: EMPIRE_MODEL_OK',
+            temperature=0,
+        )
+        return {
+            "ok": "EMPIRE_MODEL_OK" in response,
+            "model": settings.ollama_model,
+            "response": response[:1000],
+        }
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Local model inference failed: {str(exc)[:500]}",
+        ) from exc
 
 @app.get("/health")
 def health():
