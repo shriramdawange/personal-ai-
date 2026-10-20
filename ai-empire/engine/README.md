@@ -100,7 +100,7 @@ python -m empire.cli events 1
 - `GET /projects`, `POST /projects`, `PATCH /projects/{id}/status`
 - `GET /invoices`, `POST /invoices`
 
-Task claiming uses a conditional database update to prevent the API and worker from claiming the same queued task concurrently. The worker persists a heartbeat and reports its state in the dashboard; stale heartbeats are labelled instead of pretending the worker is alive. At worker startup, running tasks older than `EMPIRE_STALE_TASK_MINUTES` (default 60) are marked failed and an audit event is recorded, so they can be retried after inspection. This recovery is deliberately conservative and only runs at worker startup. Automated tests cover this recovery, heartbeat persistence, task claiming, dashboard serving, model readiness reporting, database lifecycle and existing artifact/research checks.
+Task claiming uses a conditional database update to prevent the API and worker from claiming the same queued task concurrently. The worker persists a heartbeat and reports its state in the dashboard; stale heartbeats are labelled instead of pretending the worker is alive. At worker startup, running tasks older than `EMPIRE_STALE_TASK_MINUTES` (default 60) are marked failed and an audit event is recorded, so they can be retried after inspection. This recovery is deliberately conservative and only runs at worker startup. The local Ollama adapter now uses a configurable request timeout (`EMPIRE_LLM_TIMEOUT_SECONDS`, default 180 seconds) and bounded exponential backoff for transient connection, timeout, HTTP 429, and HTTP 5xx failures (`EMPIRE_LLM_RETRIES`, default 2 retries; capped at 3). Non-transient HTTP failures and empty model responses are not blindly retried. Automated tests cover retry policy, heartbeat persistence, stale-task recovery, task claiming, dashboard serving, model readiness reporting, database lifecycle and existing artifact/research checks.
 
 ## Guardrails and limitations
 
@@ -115,7 +115,7 @@ Task claiming uses a conditional database update to prevent the API and worker f
 ## Next engineering milestones
 
 1. Run syntax checks and end-to-end tests on a machine with Python + Ollama.
-2. Add retries, per-task timeouts, stronger parsing and deterministic QA gates.
+2. Add per-task deadlines, structured agent outputs and deterministic QA gates.
 3. Add a durable remote queue and authenticated control API if a cloud dashboard is needed.
 4. Add CRM adapters and approval-gated outreach after validating the lead research quality.
 5. Add sandboxed coding tools and test execution; never let the model run unrestricted shell commands.
