@@ -40,6 +40,18 @@ python -m empire.cli init
 
 If Ollama is not on PATH, install/start it first. Do not run the model download until there is sufficient free disk space.
 
+## Start the control interface
+
+After setup completes, run the local API and worker:
+
+```powershell
+.\start.ps1
+```
+
+Then open `http://127.0.0.1:8000/` in a browser. The functional interface calls this engine's API to create/run tasks, hunt and review leads, manage project statuses, and create draft invoice records. `/system/status` reports API, database, Ollama reachability, and whether the configured model is installed. `/docs` provides interactive API documentation.
+
+The UI is served by FastAPI from the same origin; no separate frontend build or paid hosting is required. Keep the server local. Do not expose it to the public internet without a reviewed authentication and TLS deployment.
+
 ## Use the team
 
 ```powershell
@@ -76,6 +88,17 @@ python -m empire.cli events 1
 5. Output and QA notes are saved under `workspace/`; explicit `FILE: path` fenced blocks are materialized into a task-isolated artifacts directory. Python syntax and JavaScript syntax (when Node is installed) receive static checks; this is not a substitute for full tests.
 6. Leads can move through a CRM status pipeline, projects can be tracked through delivery states, and draft invoice records can be attached to projects. These records do not send outreach, sign contracts, deploy software, or process payments.
 6. Client-hunting searches public results, asks the model to score fit using only supplied evidence, and saves a draft. Verify every prospect manually before outreach.
+
+## API surface
+
+- `GET /health` — basic service health
+- `GET /system/status` — database and local model readiness
+- `GET /tasks`, `POST /tasks`, `GET /tasks/{id}`, `POST /tasks/{id}/run`
+- `GET /leads`, `POST /leads/hunt`, `PATCH /leads/{id}/status`
+- `GET /projects`, `POST /projects`, `PATCH /projects/{id}/status`
+- `GET /invoices`, `POST /invoices`
+
+Task claiming uses a conditional database update to prevent the API and worker from claiming the same queued task concurrently. Automated tests cover this guard, dashboard serving, model readiness reporting, database lifecycle and existing artifact/research checks.
 
 ## Guardrails and limitations
 
