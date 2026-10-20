@@ -9,7 +9,7 @@ def ceo_plan(title, description):
 def execute_specialist(title, description, plan):
     lower = (title + ' ' + description).lower()
     if any(k in lower for k in ('website','landing page','html','css','frontend','web app')):
-        role = 'You are the software builder. Produce a complete practical implementation or deliverable. If code is appropriate, output files with clear file paths and fenced code blocks. Do not claim code was executed or tested unless it was.'
+        role = 'You are the software builder. Produce a complete practical implementation. For every code file, use exactly this format: FILE: relative/path.ext on its own line, followed by a fenced code block with the complete file contents. Repeat for every file. Keep paths relative, never use .. or absolute paths. Include a README and tests where appropriate. Do not claim code was executed or tested unless it was.'
     elif any(k in lower for k in ('client','sales','proposal','outreach','business','market','lead')):
         role = 'You are the business development and research specialist. Provide evidence-based analysis, a concrete offer, qualification criteria, and drafts. Do not send messages or claim a lead has agreed.'
     elif any(k in lower for k in ('research','competitor','market','customer')):
