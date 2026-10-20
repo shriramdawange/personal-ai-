@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 from .agents import ceo_plan, execute_specialist, quality_review, revise_output
 from .config import settings
-from .db import event, get_task, init_db, list_tasks, update_task
+from .db import claim_task, event, get_task, init_db, list_tasks, update_task
 from .delivery import materialize_files, validate_artifacts
 
 class Orchestrator:
@@ -16,7 +16,10 @@ class Orchestrator:
             raise ValueError(f"Task {task_id} not found")
         if task['status'] == 'succeeded':
             return task
-        update_task(task_id, status='running', error=None)
+        if not claim_task(task_id):
+            current = get_task(task_id)
+            current_status = current['status'] if current else 'missing'
+            raise RuntimeError(f'Task {task_id} cannot be claimed from status {current_status}.')
         try:
             event(task_id, 'CEO', 'plan_started', task['title'])
             plan = ceo_plan(task['title'], task['description'])
