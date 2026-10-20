@@ -1,6 +1,6 @@
 import os
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
 # Importing the app initializes the local SQLite schema.
@@ -12,6 +12,20 @@ class ApiTests(unittest.TestCase):
         response = client.get('/health')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['ok'])
+
+    def test_dashboard_is_served_from_api(self):
+        response = TestClient(app).get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('AI EMPIRE', response.text)
+
+    def test_system_status_reports_local_model(self):
+        response_obj = Mock()
+        response_obj.json.return_value = {'models': [{'name': 'qwen2.5-coder:3b'}]}
+        with patch('empire.api.requests.get', return_value=response_obj):
+            response = TestClient(app).get('/system/status')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ollama']['reachable'])
+        self.assertTrue(response.json()['ollama']['model_available'])
 
     def test_remote_bind_requires_strong_token(self):
         from empire.api import verify_access
