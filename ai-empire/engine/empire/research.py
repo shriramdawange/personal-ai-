@@ -40,7 +40,13 @@ def hunt_clients(query: str, limit: int = 10):
             for line in assessment.splitlines():
                 if line.strip().upper().startswith('BUSINESS:'):
                     name=line.split(':',1)[1].strip()[:300] or name
-            lead={'name':name,'url':item['url'],'snippet':item['snippet'],'fit_score':score,'rationale':assessment,'outreach_draft':assessment}
+            draft=''
+            lines=assessment.splitlines()
+            for index,line in enumerate(lines):
+                if line.strip().upper().startswith('OUTREACH_DRAFT:'):
+                    draft='\\n'.join([line.split(':',1)[1].strip()]+lines[index+1:]).strip()
+                    break
+            lead={'name':name,'url':item['url'],'snippet':item['snippet'],'fit_score':score,'rationale':assessment,'outreach_draft':draft or 'Review the qualification notes and write a personalized draft manually.'}
             save_lead(lead); saved.append(lead)
         except Exception as exc:
             saved.append({'name':item['title'],'url':item['url'],'fit_score':0,'error':str(exc)})
