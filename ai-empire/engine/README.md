@@ -48,7 +48,7 @@ After setup completes, run the local API and worker:
 .\start.ps1
 ```
 
-Then open `http://127.0.0.1:8000/` in a browser. The functional interface calls this engine's API to create/run tasks, open saved deliverables, hunt and review leads, manage project statuses, and create draft invoice records. `/system/status` reports API, database, Ollama reachability, and whether the configured model is installed. The **Test 3B model** button sends a real short inference request through the local model adapter and reports success or failure. `/docs` provides interactive API documentation.
+Then open `http://127.0.0.1:8000/` in a browser. The launcher starts three separate pieces: the local API, a dedicated task worker that reports heartbeats, and recurring public-lead discovery. Lead discovery no longer competes with the dedicated worker for task execution. The functional interface calls this engine's API to create/run tasks, open saved deliverables, hunt and review leads, manage project statuses, and create draft invoice records. `/system/status` reports API, database, Ollama reachability, and whether the configured model is installed. The **Test 3B model** button sends a real short inference request through the local model adapter and reports success or failure. `/docs` provides interactive API documentation.
 
 The UI is served by FastAPI from the same origin; no separate frontend build or paid hosting is required. Keep the server local. Do not expose it to the public internet without a reviewed authentication and TLS deployment.
 
@@ -71,8 +71,11 @@ python -m empire.cli leads
 # Run one automatic lead-discovery cycle and process one queued task
 python -m empire.cli autopilot --once
 
-# Keep discovering leads and processing tasks daily while the computer stays on
+# Keep discovering leads and processing tasks daily while the computer stays on (combined CLI mode)
 python -m empire.cli autopilot --interval-hours 24
+
+# Run discovery separately when a dedicated worker is already running
+python -m empire.cli autopilot --interval-hours 24 --discover-only
 
 # Inspect task state and audit events
 python -m empire.cli tasks
