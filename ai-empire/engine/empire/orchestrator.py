@@ -32,7 +32,8 @@ class Orchestrator:
             stamp=time.strftime('%Y%m%d-%H%M%S')
             safe=''.join(c.lower() if c.isalnum() else '-' for c in task['title'])[:48].strip('-') or 'task'
             output_path=settings.workspace / f'task-{task_id}-{safe}-{stamp}.md'
-            output_path.write_text(f'# {task[\'title\']}\n\n## CEO plan\n\n{plan}\n\n## Deliverable\n\n{output}\n\n## QA review\n\n{review}\n',encoding='utf-8')
+            task_title = task['title']
+            output_path.write_text(f'# {task_title}\n\n## CEO plan\n\n{plan}\n\n## Deliverable\n\n{output}\n\n## QA review\n\n{review}\n',encoding='utf-8')
             status='succeeded' if 'QA_STATUS: PASS' in review.upper() else 'needs_review'
             update_task(task_id,status=status,result_path=str(output_path))
             event(task_id,'Orchestrator','task_finished',f'status={status}; artifact={output_path}')
