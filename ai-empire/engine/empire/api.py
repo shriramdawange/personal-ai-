@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from .config import settings
 from .db import (
     add_task, create_invoice, create_project, events, get_task, init_db,
-    list_invoices, list_leads, list_projects, list_tasks,
+    list_invoices, list_leads, list_projects, list_tasks, get_worker_status,
     update_lead_status, update_project_status
 )
 from .orchestrator import Orchestrator
@@ -80,10 +80,29 @@ def system_status(authorization: Optional[str] = Header(default=None)):
         database = {"ok": True}
     except Exception as exc:
         database = {"ok": False, "error": str(exc)[:240]}
+    worker = get_worker_status()
+    if worker:
+        from datetime import datetime, timezone
+        try:
+            heartbeat = datetime.fromisoformat(worker["heartbeat_at"])
+            age_seconds = max(0, int((datetime.now(timezone.utc) - heartbeat).total_seconds()))
+            worker["age_seconds"] = age_seconds
+            worker["alive_recently"] = age_seconds <= max(90, settings.poll_seconds * 4)
+            if not worker["alive_recently"] and worker["state"] not in ("stopped",):
+                worker["display_state"] = "stale"
+            else:
+                worker["display_state"] = worker["state"]
+        except (TypeError, ValueError):
+            worker["age_seconds"] = None
+            worker["alive_recently"] = False
+            worker["display_state"] = "unknown"
+    else:
+        worker = {"state": "not_started", "display_state": "not_started", "alive_recently": False, "detail": "Start.ps1 has not reported a worker heartbeat yet."}
     return {
         "api": {"ok": True, "service": "ai-empire-engine"},
         "ollama": ollama,
         "database": database,
+        "worker": worker,
     }
 
 @app.post("/system/model-test")
