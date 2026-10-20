@@ -100,6 +100,25 @@ def create_task(payload: TaskInput, authorization: Optional[str] = Header(defaul
     task_id = add_task(payload.title.strip(), payload.description.strip())
     return get_task(task_id)
 
+@app.get("/tasks/{task_id}/artifact")
+def task_artifact(task_id: int, authorization: Optional[str] = Header(default=None)):
+    verify_access(authorization)
+    item = get_task(task_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Task not found")
+    result_path = item.get("result_path")
+    if not result_path:
+        raise HTTPException(status_code=404, detail="This task has no saved deliverable yet")
+    workspace = settings.workspace.resolve()
+    artifact = Path(result_path).resolve()
+    try:
+        artifact.relative_to(workspace)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Artifact path is outside the configured workspace")
+    if not artifact.is_file():
+        raise HTTPException(status_code=404, detail="Saved deliverable file was not found")
+    return FileResponse(artifact, media_type="text/markdown; charset=utf-8", filename=artifact.name)
+
 @app.get("/tasks/{task_id}")
 def task_detail(task_id: int, authorization: Optional[str] = Header(default=None)):
     verify_access(authorization)
