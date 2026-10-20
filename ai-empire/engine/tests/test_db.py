@@ -19,6 +19,34 @@ class DatabaseTests(unittest.TestCase):
                 db.update_task(task_id, status='succeeded')
                 self.assertEqual(db.get_task(task_id)['status'], 'succeeded')
 
+    def test_worker_heartbeat_round_trip(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch('empire.db.settings', SimpleNamespace(db_path=Path(tmp) / 'test.db')):
+                from empire import db
+                db.init_db()
+                self.assertIsNone(db.get_worker_status())
+                db.heartbeat_worker('idle', detail='No queued tasks', pid=1234)
+                status = db.get_worker_status()
+                self.assertEqual(status['state'], 'idle')
+                self.assertEqual(status['detail'], 'No queued tasks')
+                self.assertEqual(status['pid'], 1234)
+
+    def test_stale_running_tasks_are_recovered_and_audited(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch('empire.db.settings', SimpleNamespace(db_path=Path(tmp) / 'test.db')):
+                from empire import db
+                db.init_db()
+                task_id = db.add_task('Interrupted task')
+                self.assertTrue(db.claim_task(task_id))
+                with db.connect() as con:
+                    con.execute("UPDATE tasks SET updated_at='2000-01-01T00:00:00+00:00' WHERE id=?", (task_id,))
+                self.assertEqual(db.recover_stale_tasks(5), 1)
+                task = db.get_task(task_id)
+                self.assertEqual(task['status'], 'failed')
+                self.assertIn('Recovered abandoned task', task['error'])
+                self.assertEqual(db.events(task_id)[0]['event'], 'stale_task_recovered')
+                self.assertEqual(db.recover_stale_tasks(5), 0)
+
     def test_lead_project_invoice_lifecycle(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch('empire.db.settings', SimpleNamespace(db_path=Path(tmp) / 'test.db')):
