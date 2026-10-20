@@ -51,6 +51,16 @@ class ApiTests(unittest.TestCase):
                 response = TestClient(app).get("/tasks/78/artifact")
             self.assertEqual(response.status_code, 403)
 
+    def test_system_status_includes_worker_heartbeat(self):
+        from empire import api
+        with patch("empire.api.get_worker_status", return_value={
+            "state": "idle", "heartbeat_at": "2026-10-20T00:00:00+00:00", "detail": "No queued tasks"
+        }), patch("empire.api.requests.get", side_effect=RuntimeError("offline")):
+            response = TestClient(app).get("/system/status")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("worker", response.json())
+        self.assertEqual(response.json()["worker"]["state"], "idle")
+
     def test_system_status_reports_local_model(self):
         response_obj = Mock()
         response_obj.json.return_value = {'models': [{'name': 'qwen2.5-coder:3b'}]}
