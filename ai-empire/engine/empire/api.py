@@ -1,7 +1,11 @@
 import hmac
 import os
+from pathlib import Path
 from typing import Optional
+import requests
 from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from .config import settings
 from .db import (
@@ -55,6 +59,31 @@ def verify_access(authorization: Optional[str]):
             raise HTTPException(status_code=401, detail="Valid bearer token required.")
     elif token and (not authorization or not hmac.compare_digest(authorization, "Bearer " + token)):
         raise HTTPException(status_code=401, detail="Valid bearer token required.")
+
+@app.get("/system/status")
+def system_status(authorization: Optional[str] = Header(default=None)):
+    verify_access(authorization)
+    ollama = {"reachable": False, "model_available": False, "model": settings.ollama_model}
+    try:
+        response = requests.get(settings.ollama_base_url + "/api/tags", timeout=2)
+        response.raise_for_status()
+        payload = response.json()
+        installed = [item.get("name", "") for item in payload.get("models", [])]
+        ollama["reachable"] = True
+        ollama["installed_models"] = installed
+        ollama["model_available"] = settings.ollama_model in installed
+    except Exception as exc:
+        ollama["error"] = str(exc)[:240]
+    try:
+        init_db()
+        database = {"ok": True}
+    except Exception as exc:
+        database = {"ok": False, "error": str(exc)[:240]}
+    return {
+        "api": {"ok": True, "service": "ai-empire-engine"},
+        "ollama": ollama,
+        "database": database,
+    }
 
 @app.get("/health")
 def health():
@@ -146,3 +175,10 @@ def invoice_create(payload: InvoiceInput, authorization: Optional[str] = Header(
         return next(item for item in list_invoices() if item["id"] == invoice_id)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.get("/")
+def dashboard():
+    return FileResponse(Path(__file__).parent / "static" / "index.html")
+
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
