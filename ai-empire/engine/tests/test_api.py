@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
@@ -27,7 +28,7 @@ class ApiTests(unittest.TestCase):
             workspace.mkdir()
             artifact = workspace / "result.md"
             artifact.write_text("# Test deliverable", encoding="utf-8")
-            with patch.object(api.settings, "workspace", workspace), patch(
+            with patch("empire.api.settings", SimpleNamespace(workspace=workspace)), patch(
                 "empire.api.get_task",
                 return_value={"id": 77, "result_path": str(artifact)},
             ):
