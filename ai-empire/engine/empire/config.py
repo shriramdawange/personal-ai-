@@ -18,5 +18,6 @@ class Settings:
     portfolio_url: str = os.getenv("BUSINESS_PORTFOLIO_URL", "")
     contact_email: str = os.getenv("BUSINESS_CONTACT_EMAIL", "")
     lead_region: str = os.getenv("LEAD_SEARCH_REGION", "India")
+    autopilot_queries: str = os.getenv("AUTOPILOT_QUERIES", "small business website redesign India|small business process automation India|SME AI automation services India")
 
 settings = Settings()
