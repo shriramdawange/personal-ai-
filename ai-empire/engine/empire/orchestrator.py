@@ -79,7 +79,7 @@ class Orchestrator:
         import threading
         print('AI Empire worker started. Stop with Ctrl+C. Local model:', settings.ollama_model)
         recovered = recover_stale_tasks(getattr(settings, "stale_task_minutes", 60))
-        worker_state = {"state": "starting", "detail": f"Recovered {recovered} abandoned task(s)"}
+        worker_state = {"state": "starting", "detail": f"Recovered {recovered} abandoned task(s)", "task_id": None}
         state_lock = threading.Lock()
         stop_heartbeat = threading.Event()
 
@@ -88,7 +88,7 @@ class Orchestrator:
                 with state_lock:
                     state = dict(worker_state)
                 try:
-                    heartbeat_worker(state["state"], detail=state["detail"], pid=os.getpid())
+                    heartbeat_worker(state["state"], task_id=state.get("task_id"), detail=state["detail"], pid=os.getpid())
                 except Exception as exc:
                     print("Worker heartbeat error:", exc)
 
@@ -101,14 +101,20 @@ class Orchestrator:
                     with state_lock:
                         worker_state.update(state="working", detail="Checking task queue and processing available work")
                     heartbeat_worker("working", detail=worker_state["detail"], pid=os.getpid())
-                    task = self.run_next()
-                    if task:
+                    queued = [item for item in list_tasks(100) if item["status"] == "queued"]
+                    if queued:
+                        task_id = queued[-1]["id"]
+                        detail = f"Processing task #{task_id}"
+                        with state_lock:
+                            worker_state.update(state="working", task_id=task_id, detail=detail)
+                        heartbeat_worker("working", task_id=task_id, detail=detail, pid=os.getpid())
+                        task = self.run_task(task_id)
                         detail = f"Last task #{task['id']}: {task['status']}"
                         print(f"Task #{task['id']}: {task['status']} {task.get('result_path') or task.get('error') or ''}")
                     else:
                         detail = "No queued tasks"
                     with state_lock:
-                        worker_state.update(state="idle", detail=detail)
+                        worker_state.update(state="idle", task_id=None, detail=detail)
                     heartbeat_worker("idle", detail=detail, pid=os.getpid())
                 except Exception as exc:
                     with state_lock:
