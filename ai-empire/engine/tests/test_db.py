@@ -31,6 +31,19 @@ class DatabaseTests(unittest.TestCase):
                 self.assertEqual(status['detail'], 'No queued tasks')
                 self.assertEqual(status['pid'], 1234)
 
+    def test_worker_heartbeat_refreshes_running_task_activity(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch('empire.db.settings', SimpleNamespace(db_path=Path(tmp) / 'test.db')):
+                from empire import db
+                db.init_db()
+                task_id = db.add_task('Long task')
+                self.assertTrue(db.claim_task(task_id))
+                with db.connect() as con:
+                    con.execute("UPDATE tasks SET updated_at='2000-01-01T00:00:00+00:00' WHERE id=?", (task_id,))
+                db.heartbeat_worker('working', task_id=task_id, detail='Processing task')
+                task = db.get_task(task_id)
+                self.assertGreater(task['updated_at'], '2000-01-01T00:00:00+00:00')
+
     def test_stale_running_tasks_are_recovered_and_audited(self):
         with tempfile.TemporaryDirectory() as tmp:
             with patch('empire.db.settings', SimpleNamespace(db_path=Path(tmp) / 'test.db')):
