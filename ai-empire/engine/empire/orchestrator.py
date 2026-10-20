@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 from .agents import ceo_plan, execute_specialist, quality_review, revise_output
 from .config import settings
-from .db import claim_task, event, get_task, init_db, list_tasks, update_task
+from .db import claim_task, event, get_task, init_db, list_tasks, update_task, heartbeat_worker, recover_stale_tasks
 from .delivery import materialize_files, validate_artifacts
 
 class Orchestrator:
@@ -75,16 +75,25 @@ class Orchestrator:
         return self.run_task(queued[-1]['id'])
 
     def serve(self, once=False):
+        import os
         print('AI Empire worker started. Stop with Ctrl+C. Local model:', settings.ollama_model)
-        while True:
-            try:
-                task = self.run_next()
-                if task:
-                    print(f"Task #{task['id']}: {task['status']} {task.get('result_path') or task.get('error') or ''}")
-                elif once:
+        recovered = recover_stale_tasks(getattr(settings, "stale_task_minutes", 60))
+        heartbeat_worker("starting", detail=f"Recovered {recovered} abandoned task(s)", pid=os.getpid())
+        try:
+            while True:
+                try:
+                    heartbeat_worker("working", detail="Checking task queue", pid=os.getpid())
+                    task = self.run_next()
+                    if task:
+                        heartbeat_worker("idle", detail=f"Last task #{task['id']}: {task['status']}", pid=os.getpid())
+                        print(f"Task #{task['id']}: {task['status']} {task.get('result_path') or task.get('error') or ''}")
+                    else:
+                        heartbeat_worker("idle", detail="No queued tasks", pid=os.getpid())
+                except Exception as exc:
+                    heartbeat_worker("error", detail=str(exc)[:1000], pid=os.getpid())
+                    print('Worker error:', exc)
+                if once:
                     return
-            except Exception as exc:
-                print('Worker error:', exc)
-            if once:
-                return
-            time.sleep(settings.poll_seconds)
+                time.sleep(settings.poll_seconds)
+        finally:
+            heartbeat_worker("stopped", detail="Worker process stopped", pid=os.getpid())
