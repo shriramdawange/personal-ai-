@@ -48,7 +48,7 @@ After setup completes, run the local API and worker:
 .\start.ps1
 ```
 
-Then open `http://127.0.0.1:8000/` in a browser. The functional interface calls this engine's API to create/run tasks, hunt and review leads, manage project statuses, and create draft invoice records. `/system/status` reports API, database, Ollama reachability, and whether the configured model is installed. `/docs` provides interactive API documentation.
+Then open `http://127.0.0.1:8000/` in a browser. The functional interface calls this engine's API to create/run tasks, open saved deliverables, hunt and review leads, manage project statuses, and create draft invoice records. `/system/status` reports API, database, Ollama reachability, and whether the configured model is installed. The **Test 3B model** button sends a real short inference request through the local model adapter and reports success or failure. `/docs` provides interactive API documentation.
 
 The UI is served by FastAPI from the same origin; no separate frontend build or paid hosting is required. Keep the server local. Do not expose it to the public internet without a reviewed authentication and TLS deployment.
 
@@ -93,6 +93,8 @@ python -m empire.cli events 1
 
 - `GET /health` — basic service health
 - `GET /system/status` — database and local model readiness
+- `POST /system/model-test` — run a real local inference smoke test
+- `GET /tasks/{id}/artifact` — safely download a task report only from the configured workspace
 - `GET /tasks`, `POST /tasks`, `GET /tasks/{id}`, `POST /tasks/{id}/run`
 - `GET /leads`, `POST /leads/hunt`, `PATCH /leads/{id}/status`
 - `GET /projects`, `POST /projects`, `PATCH /projects/{id}/status`
