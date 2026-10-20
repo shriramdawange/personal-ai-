@@ -1,0 +1,22 @@
+from dataclasses import dataclass
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
+@dataclass(frozen=True)
+class Settings:
+    ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
+    ollama_model: str = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:3b")
+    db_path: Path = Path(os.getenv("EMPIRE_DB_PATH", "./data/empire.db"))
+    workspace: Path = Path(os.getenv("EMPIRE_WORKSPACE", "./workspace"))
+    poll_seconds: int = max(3, int(os.getenv("EMPIRE_POLL_SECONDS", "15")))
+    max_revisions: int = max(0, min(2, int(os.getenv("EMPIRE_MAX_REVISIONS", "1"))))
+    business_name: str = os.getenv("BUSINESS_NAME", "Your AI Studio")
+    business_services: str = os.getenv("BUSINESS_SERVICES", "websites, automation, AI prototypes, software development")
+    portfolio_url: str = os.getenv("BUSINESS_PORTFOLIO_URL", "")
+    contact_email: str = os.getenv("BUSINESS_CONTACT_EMAIL", "")
+    lead_region: str = os.getenv("LEAD_SEARCH_REGION", "India")
+
+settings = Settings()
