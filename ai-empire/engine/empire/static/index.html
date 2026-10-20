@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#10131b"><title>AI Empire · Control Center</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/"><span class="brand-mark">Æ</span><span><b>AI EMPIRE</b><small>LOCAL OPERATIONS</small></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <button class="nav active" data-view="overview"><span>◫</span> Overview</button>
+      <button class="nav" data-view="tasks"><span>⌘</span> AI Tasks</button>
+      <button class="nav" data-view="leads"><span>◎</span> Client leads</button>
+      <button class="nav" data-view="projects"><span>▤</span> Projects</button>
+      <button class="nav" data-view="invoices"><span>₹</span> Draft invoices</button>
+      <div class="sidebar-bottom"><span class="live-dot"></span><span id="connection-label">Checking local engine…</span><small>Runs on your machine</small></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div><div class="eyebrow">LOCAL AI OPERATIONS / V0.4</div><h1 id="page-title">Overview</h1></div><div class="top-actions"><span id="model-pill" class="pill muted">MODEL CHECKING</span><button class="button secondary" id="refresh-btn">↻ Refresh</button></div></header>
+      <div id="notice" class="notice hidden" role="status"></div>
+      <section id="view-overview" class="view">
+        <div class="welcome"><div><div class="eyebrow">COMMAND CENTER</div><h2>Build work. Verify results.<br><em>Keep humans in control.</em></h2><p>Your local AI team’s tasks and business operations, connected to the real engine.</p></div><div class="welcome-orb">Æ</div></div>
+        <div class="metrics">
+          <article class="metric"><span>All tasks</span><b id="metric-tasks">—</b><small id="metric-task-note">Persistent task queue</small></article>
+          <article class="metric"><span>Client leads</span><b id="metric-leads">—</b><small>Research results; verify manually</small></article>
+          <article class="metric"><span>Projects</span><b id="metric-projects">—</b><small>Tracked delivery lifecycle</small></article>
+          <article class="metric"><span>Draft invoices</span><b id="metric-invoices">—</b><small>No payments are processed</small></article>
+        </div>
+        <div class="grid-two"><article class="panel"><div class="panel-head"><div><h3>Engine status</h3><p>Live checks against the local API and Ollama</p></div><span class="mini-icon">⌁</span></div><div id="engine-status" class="status-list"><div class="skeleton"></div></div><div class="button-row"><button class="button secondary" data-goto="tasks">Open task queue →</button><button class="button primary" id="model-test-btn">▶ Test 3B model</button></div><p id="model-test-result" class="helper" aria-live="polite">Run a short local inference to verify the model actually responds.</p></article><article class="panel"><div class="panel-head"><div><h3>Recent tasks</h3><p>Latest persisted work items</p></div><button class="text-button" data-goto="tasks">View all →</button></div><div id="recent-tasks" class="list"><div class="skeleton"></div></div></article></div>
+        <div class="footnote">Safety boundary: lead discovery creates research records and drafts. This interface does not send outreach, sign contracts, process payments, or deploy client code.</div>
+      </section>
+      <section id="view-tasks" class="view hidden">
+        <div class="section-intro"><div><h2>AI task queue</h2><p>Submit work to the CEO planner → specialist → QA pipeline.</p></div></div>
+        <form id="task-form" class="panel form-grid"><label>Task title<input name="title" required minlength="3" maxlength="180" placeholder="Build a landing page for a local business"></label><label>Task brief<textarea name="description" rows="3" maxlength="12000" placeholder="Describe the deliverable, audience, constraints and acceptance criteria…"></textarea></label><div class="form-footer"><span class="helper">Tasks are stored locally. Running a task uses the configured Ollama model.</span><button class="button primary" type="submit">＋ Create task</button></div></form>
+        <div class="panel"><div class="panel-head"><div><h3>All tasks</h3><p>Run queued work or inspect its output and QA trail.</p></div><button class="button secondary" id="tasks-refresh">Refresh</button></div><div id="tasks-table" class="table-wrap"></div></div>
+        <div id="task-detail" class="panel hidden"></div>
+      </section>
+      <section id="view-leads" class="view hidden">
+        <div class="section-intro"><div><h2>Client leads</h2><p>Search public results and generate outreach drafts. Nothing is sent automatically.</p></div></div>
+        <form id="hunt-form" class="panel hunt-form"><label>What kind of clients are you looking for?<input name="query" required minlength="3" maxlength="400" value="small businesses in India that may need a website redesign"></label><label>Results<select name="limit"><option value="3">3 leads</option><option value="5" selected>5 leads</option><option value="10">10 leads</option></select></label><button class="button primary" type="submit">⌕ Hunt clients</button><p class="helper full-row">Requires internet access and a working local model. Search results are unverified; review before contacting.</p></form>
+        <div class="panel"><div class="panel-head"><div><h3>Lead pipeline</h3><p>Change status after your own review.</p></div><button class="button secondary" id="leads-refresh">Refresh</button></div><div id="leads-list" class="cards-list"></div></div>
+      </section>
+      <section id="view-projects" class="view hidden">
+        <div class="section-intro"><div><h2>Projects</h2><p>Track scope, budgets and delivery status from qualified leads to completion.</p></div></div>
+        <form id="project-form" class="panel form-grid compact"><label>Project name<input name="name" required minlength="2" maxlength="300" placeholder="Client website build"></label><label>Scope<textarea name="scope" rows="2" placeholder="Scope, deliverables and acceptance criteria"></textarea></label><label>Budget (₹)<input name="budget" type="number" min="0" step="1" value="0"></label><div class="form-footer"><span class="helper">Creates a project record only.</span><button class="button primary" type="submit">＋ Create project</button></div></form>
+        <div class="panel"><div class="panel-head"><div><h3>Project tracker</h3><p>Update statuses as work progresses.</p></div><button class="button secondary" id="projects-refresh">Refresh</button></div><div id="projects-list" class="cards-list"></div></div>
+      </section>
+      <section id="view-invoices" class="view hidden">
+        <div class="section-intro"><div><h2>Draft invoices</h2><p>Prepare internal invoice records. No money is collected or transferred.</p></div></div>
+        <form id="invoice-form" class="panel form-grid compact"><label>Project<select name="project_id" id="invoice-project" required><option value="">Choose a project</option></select></label><label>Description<input name="description" required minlength="2" maxlength="1000" placeholder="Milestone 1 delivery"></label><label>Amount (₹)<input name="amount" required type="number" min="0" step="0.01" value="0"></label><label>Due date<input name="due_date" type="date"></label><div class="form-footer"><span class="helper">Saved with draft status.</span><button class="button primary" type="submit">＋ Create draft</button></div></form>
+        <div class="panel"><div class="panel-head"><div><h3>Invoice records</h3><p>Draft records linked to projects.</p></div><button class="button secondary" id="invoices-refresh">Refresh</button></div><div id="invoices-list" class="table-wrap"></div></div>
+      </section>
+      <footer class="page-footer">AI Empire Engine · Local-first · Human approval for external actions</footer>
+    </main>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
