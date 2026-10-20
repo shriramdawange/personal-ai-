@@ -115,15 +115,21 @@ def list_invoices(limit=100):
         return [dict(r) for r in con.execute('SELECT * FROM invoices ORDER BY id DESC LIMIT ?', (limit,)).fetchall()]
 
 def heartbeat_worker(state, task_id=None, detail="", pid=None):
-    """Persist the worker's last known state for truthful dashboard status."""
+    """Persist worker health and refresh activity for its currently running task."""
+    stamp = now()
     with connect() as con:
         con.execute(
             """INSERT INTO worker_status(id,state,task_id,detail,pid,heartbeat_at)
                VALUES(1,?,?,?,?,?)
                ON CONFLICT(id) DO UPDATE SET state=excluded.state,task_id=excluded.task_id,
                detail=excluded.detail,pid=excluded.pid,heartbeat_at=excluded.heartbeat_at""",
-            (state, task_id, str(detail)[:1000], pid, now()),
+            (state, task_id, str(detail)[:1000], pid, stamp),
         )
+        if state == "working" and task_id is not None:
+            con.execute(
+                "UPDATE tasks SET updated_at=? WHERE id=? AND status='running'",
+                (stamp, task_id),
+            )
 
 def get_worker_status():
     with connect() as con:
