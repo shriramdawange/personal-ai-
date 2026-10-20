@@ -13,6 +13,8 @@ class Settings:
     workspace: Path = Path(os.getenv("EMPIRE_WORKSPACE", "./workspace"))
     poll_seconds: int = max(3, int(os.getenv("EMPIRE_POLL_SECONDS", "15")))
     stale_task_minutes: int = max(5, int(os.getenv("EMPIRE_STALE_TASK_MINUTES", "60")))
+    llm_timeout_seconds: int = max(15, int(os.getenv("EMPIRE_LLM_TIMEOUT_SECONDS", "180")))
+    llm_retries: int = max(0, min(3, int(os.getenv("EMPIRE_LLM_RETRIES", "2"))))
     max_revisions: int = max(0, min(2, int(os.getenv("EMPIRE_MAX_REVISIONS", "1"))))
     business_name: str = os.getenv("BUSINESS_NAME", "Your AI Studio")
     business_services: str = os.getenv("BUSINESS_SERVICES", "websites, automation, AI prototypes, software development")
