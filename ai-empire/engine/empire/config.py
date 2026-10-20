@@ -12,6 +12,7 @@ class Settings:
     db_path: Path = Path(os.getenv("EMPIRE_DB_PATH", "./data/empire.db"))
     workspace: Path = Path(os.getenv("EMPIRE_WORKSPACE", "./workspace"))
     poll_seconds: int = max(3, int(os.getenv("EMPIRE_POLL_SECONDS", "15")))
+    stale_task_minutes: int = max(5, int(os.getenv("EMPIRE_STALE_TASK_MINUTES", "60")))
     max_revisions: int = max(0, min(2, int(os.getenv("EMPIRE_MAX_REVISIONS", "1"))))
     business_name: str = os.getenv("BUSINESS_NAME", "Your AI Studio")
     business_services: str = os.getenv("BUSINESS_SERVICES", "websites, automation, AI prototypes, software development")
