@@ -44,7 +44,7 @@ class ApiTests(unittest.TestCase):
             workspace.mkdir()
             outside = Path(tmp) / "secret.txt"
             outside.write_text("not an artifact", encoding="utf-8")
-            with patch.object(api.settings, "workspace", workspace), patch(
+            with patch("empire.api.settings", SimpleNamespace(workspace=workspace)), patch(
                 "empire.api.get_task",
                 return_value={"id": 78, "result_path": str(outside)},
             ):
