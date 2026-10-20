@@ -1,13 +1,13 @@
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 class DatabaseTests(unittest.TestCase):
     def test_task_round_trip(self):
         with tempfile.TemporaryDirectory() as tmp:
-            with patch('empire.config.settings') as settings:
-                settings.db_path = Path(tmp) / 'test.db'
+            with patch('empire.db.settings', SimpleNamespace(db_path=Path(tmp) / 'test.db')):
                 from empire import db
                 db.init_db()
                 task_id = db.add_task('Test task', 'description')
