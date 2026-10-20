@@ -52,6 +52,14 @@ Then open `http://127.0.0.1:8000/` in a browser. The launcher starts three separ
 
 The UI is served by FastAPI from the same origin; no separate frontend build or paid hosting is required. Keep the server local. Do not expose it to the public internet without a reviewed authentication and TLS deployment.
 
+To verify the **live local model + dedicated worker + queued task + QA report + artifact download** end to end after the services start, open a second PowerShell terminal in this folder and run:
+
+```powershell
+.\\verify.ps1
+```
+
+This creates one clearly labelled local smoke-test task and waits up to 30 minutes by default. It does not contact clients or perform external actions. If the task needs human review, the script reports that instead of calling it a clean pass.
+
 ## Use the team
 
 ```powershell
