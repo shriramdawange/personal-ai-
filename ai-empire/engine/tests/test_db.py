@@ -14,6 +14,8 @@ class DatabaseTests(unittest.TestCase):
                 task = db.get_task(task_id)
                 self.assertEqual(task['title'], 'Test task')
                 self.assertEqual(task['status'], 'queued')
+                self.assertTrue(db.claim_task(task_id))
+                self.assertFalse(db.claim_task(task_id), 'A running task must not be claimed twice')
                 db.update_task(task_id, status='succeeded')
                 self.assertEqual(db.get_task(task_id)['status'], 'succeeded')
 
