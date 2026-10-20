@@ -17,4 +17,20 @@ class DatabaseTests(unittest.TestCase):
                 db.update_task(task_id, status='succeeded')
                 self.assertEqual(db.get_task(task_id)['status'], 'succeeded')
 
-if __name__ == '__main__': unittest.main()
+    def test_lead_project_invoice_lifecycle(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with patch('empire.db.settings', SimpleNamespace(db_path=Path(tmp) / 'test.db')):
+                from empire import db
+                db.init_db()
+                db.save_lead({'name':'Example','url':'https://example.org','fit_score':72,'rationale':'Evidence','outreach_draft':'Hello'})
+                lead = db.list_leads()[0]
+                self.assertTrue(db.update_lead_status(lead['id'], 'qualified', 'Reviewed manually'))
+                project_id = db.create_project('Pilot website', 'Build and test a landing page', lead['id'], 2500000)
+                self.assertEqual(db.list_projects()[0]['status'], 'proposed')
+                self.assertTrue(db.update_project_status(project_id, 'active'))
+                invoice_id = db.create_invoice(project_id, 'Pilot milestone', 500000, '2026-11-01')
+                self.assertIsNotNone(invoice_id)
+                self.assertEqual(db.list_invoices()[0]['amount_paise'], 500000)
+
+if __name__ == '__main__':
+    unittest.main()
