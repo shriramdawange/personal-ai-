@@ -38,6 +38,17 @@ def get_task(task_id):
         row = con.execute('SELECT * FROM tasks WHERE id=?', (task_id,)).fetchone()
         return dict(row) if row else None
 
+def claim_task(task_id):
+    """Atomically claim a task so API and worker cannot run it simultaneously."""
+    stamp = now()
+    with connect() as con:
+        cur = con.execute(
+            "UPDATE tasks SET status='running', error=NULL, updated_at=? "
+            "WHERE id=? AND status IN ('queued','failed','needs_review')",
+            (stamp, task_id),
+        )
+        return cur.rowcount == 1
+
 def update_task(task_id, **fields):
     allowed = {'status','result_path','error'}
     pairs = [(k,v) for k,v in fields.items() if k in allowed]
