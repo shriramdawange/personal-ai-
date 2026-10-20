@@ -74,6 +74,7 @@ python -m empire.cli events 1
 3. A specialist drafts the deliverable using the local model.
 4. QA reviews the draft and may request one bounded revision.
 5. Output and QA notes are saved under `workspace/`; explicit `FILE: path` fenced blocks are materialized into a task-isolated artifacts directory. Python syntax and JavaScript syntax (when Node is installed) receive static checks; this is not a substitute for full tests.
+6. Leads can move through a CRM status pipeline, projects can be tracked through delivery states, and draft invoice records can be attached to projects. These records do not send outreach, sign contracts, deploy software, or process payments.
 6. Client-hunting searches public results, asks the model to score fit using only supplied evidence, and saves a draft. Verify every prospect manually before outreach.
 
 ## Guardrails and limitations
