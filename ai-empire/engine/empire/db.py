@@ -21,6 +21,7 @@ def init_db():
         CREATE TABLE IF NOT EXISTS projects(id INTEGER PRIMARY KEY AUTOINCREMENT, lead_id INTEGER, name TEXT NOT NULL, scope TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'proposed', budget_paise INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(lead_id) REFERENCES leads(id));
         CREATE TABLE IF NOT EXISTS invoices(id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER NOT NULL, description TEXT NOT NULL, amount_paise INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'draft', due_date TEXT, created_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
         CREATE TABLE IF NOT EXISTS lead_notes(id INTEGER PRIMARY KEY AUTOINCREMENT, lead_id INTEGER NOT NULL, note TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(lead_id) REFERENCES leads(id));
+        CREATE TABLE IF NOT EXISTS worker_status(id INTEGER PRIMARY KEY CHECK(id=1), state TEXT NOT NULL, task_id INTEGER, detail TEXT NOT NULL DEFAULT '', pid INTEGER, heartbeat_at TEXT NOT NULL);
         """)
 
 def add_task(title, description=''):
@@ -112,3 +113,41 @@ def create_invoice(project_id, description, amount_paise, due_date=None):
 def list_invoices(limit=100):
     with connect() as con:
         return [dict(r) for r in con.execute('SELECT * FROM invoices ORDER BY id DESC LIMIT ?', (limit,)).fetchall()]
+
+def heartbeat_worker(state, task_id=None, detail="", pid=None):
+    """Persist the worker's last known state for truthful dashboard status."""
+    with connect() as con:
+        con.execute(
+            """INSERT INTO worker_status(id,state,task_id,detail,pid,heartbeat_at)
+               VALUES(1,?,?,?,?,?)
+               ON CONFLICT(id) DO UPDATE SET state=excluded.state,task_id=excluded.task_id,
+               detail=excluded.detail,pid=excluded.pid,heartbeat_at=excluded.heartbeat_at""",
+            (state, task_id, str(detail)[:1000], pid, now()),
+        )
+
+def get_worker_status():
+    with connect() as con:
+        row = con.execute("SELECT * FROM worker_status WHERE id=1").fetchone()
+        return dict(row) if row else None
+
+def recover_stale_tasks(stale_minutes=60):
+    """Fail abandoned running tasks only when their last task update is old enough."""
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(minutes=max(1, int(stale_minutes)))).isoformat()
+    with connect() as con:
+        rows = con.execute(
+            "SELECT id FROM tasks WHERE status='running' AND updated_at < ?", (cutoff,)
+        ).fetchall()
+        if rows:
+            ids = [int(row["id"]) for row in rows]
+            stamp = now()
+            con.executemany(
+                "UPDATE tasks SET status='failed',error=?,updated_at=? WHERE id=? AND status='running'",
+                [("Recovered abandoned task after worker interruption", stamp, task_id) for task_id in ids],
+            )
+            con.executemany(
+                "INSERT INTO events(task_id,agent,event,detail,created_at) VALUES(?,?,?,?,?)",
+                [(task_id, "Recovery", "stale_task_recovered", "Task was left running beyond the recovery threshold.", stamp) for task_id in ids],
+            )
+        return len(rows)
+
