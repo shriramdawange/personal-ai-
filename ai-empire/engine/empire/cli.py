@@ -25,6 +25,7 @@ def main():
     auto.add_argument('--once',action='store_true',help='Run one discovery cycle and exit')
     auto.add_argument('--interval-hours',type=float,default=24,help='Hours between discovery cycles (minimum 1)')
     auto.add_argument('--limit',type=int,default=3,help='Maximum results per search query (1-8)')
+    auto.add_argument('--discover-only',action='store_true',help='Only discover leads; leave task execution to the dedicated worker')
     ev=sub.add_parser('events',help='Show audit events for a task')
     ev.add_argument('task_id',type=int)
     args=parser.parse_args()
@@ -49,10 +50,11 @@ def main():
                     found=hunt_clients(query,max(1,min(args.limit,8)))
                     print(f'Query {query!r}: processed {len(found)} result(s)')
                 except Exception as exc: print(f'Lead search failed for {query!r}: {exc}')
-            try:
-                task=Orchestrator().run_next()
-                if task: print(f"Task #{task['id']}: {task['status']}")
-            except Exception as exc: print('Task worker failed:',exc)
+            if not args.discover_only:
+                try:
+                    task=Orchestrator().run_next()
+                    if task: print(f"Task #{task['id']}: {task['status']}")
+                except Exception as exc: print('Task worker failed:',exc)
             if args.once: break
             print(f'Next cycle in {interval/3600:g} hour(s). Keep this process and computer running.')
             time.sleep(interval)
