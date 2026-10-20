@@ -1,4 +1,4 @@
-from urllib.parse import quote_plus, urlparse
+from urllib.parse import parse_qs, quote_plus, unquote, urlparse
 import requests
 from bs4 import BeautifulSoup
 from .agents import qualify_lead
@@ -20,7 +20,12 @@ def search_web(query: str, limit: int = 10):
         href = anchor.get('href','').strip()
         title = anchor.get_text(' ',strip=True)
         snippet = snippet_node.get_text(' ',strip=True) if snippet_node else ''
-        if not href.startswith('http') or 'duckduckgo.com' in urlparse(href).netloc: continue
+        parsed = urlparse(href)
+        if 'duckduckgo.com' in parsed.netloc:
+            target = parse_qs(parsed.query).get('uddg', [''])[0]
+            href = unquote(target) if target else ''
+        if not href.startswith('http') or urlparse(href).scheme not in ('http', 'https'): continue
+        if urlparse(href).netloc.lower().endswith('duckduckgo.com'): continue
         results.append({'title':title,'url':href,'snippet':snippet})
         if len(results)>=limit: break
     return results
