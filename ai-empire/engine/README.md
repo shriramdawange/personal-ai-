@@ -48,6 +48,12 @@ python -m empire.cli worker
 python -m empire.cli hunt-clients --query "small business needs website redesign India"
 python -m empire.cli leads
 
+# Run one automatic lead-discovery cycle and process one queued task
+python -m empire.cli autopilot --once
+
+# Keep discovering leads and processing tasks daily while the computer stays on
+python -m empire.cli autopilot --interval-hours 24
+
 # Inspect task state and audit events
 python -m empire.cli tasks
 python -m empire.cli events 1
