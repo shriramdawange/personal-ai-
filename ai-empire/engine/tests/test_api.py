@@ -1,5 +1,7 @@
 import os
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 from fastapi.testclient import TestClient
 
@@ -17,6 +19,36 @@ class ApiTests(unittest.TestCase):
         response = TestClient(app).get('/')
         self.assertEqual(response.status_code, 200)
         self.assertIn('AI EMPIRE', response.text)
+
+    def test_artifact_endpoint_serves_workspace_file(self):
+        from empire import api
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            artifact = workspace / "result.md"
+            artifact.write_text("# Test deliverable", encoding="utf-8")
+            with patch.object(api.settings, "workspace", workspace), patch(
+                "empire.api.get_task",
+                return_value={"id": 77, "result_path": str(artifact)},
+            ):
+                response = TestClient(app).get("/tasks/77/artifact")
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("# Test deliverable", response.text)
+            self.assertIn("attachment", response.headers.get("content-disposition", ""))
+
+    def test_artifact_endpoint_rejects_path_outside_workspace(self):
+        from empire import api
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = Path(tmp) / "workspace"
+            workspace.mkdir()
+            outside = Path(tmp) / "secret.txt"
+            outside.write_text("not an artifact", encoding="utf-8")
+            with patch.object(api.settings, "workspace", workspace), patch(
+                "empire.api.get_task",
+                return_value={"id": 78, "result_path": str(outside)},
+            ):
+                response = TestClient(app).get("/tasks/78/artifact")
+            self.assertEqual(response.status_code, 403)
 
     def test_system_status_reports_local_model(self):
         response_obj = Mock()
