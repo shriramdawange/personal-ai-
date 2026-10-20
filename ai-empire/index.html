@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0c0e17">
+  <meta name="description" content="A safe, zero-budget-first control panel prototype for AI-assisted work.">
+  <title>AI Empire — Control Center</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="AI Empire home">
+        <span class="brand-icon">✦</span>
+        <span><b>AI EMPIRE</b><small>Founder workspace</small></span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a class="nav-link active" href="#overview">▦ <span>Overview</span></a>
+        <a class="nav-link" href="#tasks">☷ <span>Task board</span></a>
+        <a class="nav-link" href="#workers">◈ <span>AI workers</span></a>
+        <a class="nav-link" href="#roadmap">⌁ <span>Roadmap</span></a>
+      </nav>
+      <div class="sidebar-status"><span class="dot"></span><b>Prototype mode</b><p>No AI model or paid API is connected.</p></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">FOUNDER WORKSPACE</p><h1>Control Center</h1></div>
+        <div class="profile"><span class="avatar">F</span><span><b>Founder</b><small>Approval stays with you</small></span></div>
+      </header>
+
+      <section class="hero" id="overview">
+        <div class="hero-copy">
+          <p class="eyebrow">START SMALL. BUILD FOR REAL.</p>
+          <h2>Your business.<br><em>One verified task at a time.</em></h2>
+          <p>Organize work now. Add real AI workers only when their tools, limits, and safety checks are ready.</p>
+          <a class="hero-link" href="#tasks">Create your first task <span>↗</span></a>
+        </div>
+        <div class="orbit" aria-hidden="true"><span class="orbit-label top">PLAN</span><span class="orbit-label right">BUILD</span><span class="orbit-label bottom">VERIFY</span><span class="orbit-core">✦</span></div>
+      </section>
+
+      <section class="stats" aria-label="Project status">
+        <article class="stat"><span>Tasks in this browser</span><strong id="task-count">0</strong><small>Saved locally on this device</small></article>
+        <article class="stat"><span>Worker roles planned</span><strong>4</strong><small>Not connected to an AI model</small></article>
+        <article class="stat"><span>Paid API spend</span><strong>₹0</strong><small>No billing integration</small></article>
+      </section>
+
+      <div class="columns">
+        <section class="panel" id="tasks">
+          <div class="panel-head"><div><p class="eyebrow">WORK QUEUE</p><h3>Task board</h3></div><span class="pill">Local prototype</span></div>
+          <form id="task-form">
+            <label for="task-input">What should the team work on?</label>
+            <div class="entry"><input id="task-input" maxlength="180" required placeholder="e.g. Research a problem small businesses pay to solve"><button type="submit">Add task <span>＋</span></button></div>
+            <p class="hint">Tasks stay in this browser only. Adding a task does not run an AI worker.</p>
+          </form>
+          <div id="task-list" class="task-list" aria-live="polite"></div>
+          <button id="clear-completed" class="text-button" type="button">Clear completed tasks</button>
+        </section>
+
+        <section class="panel" id="workers">
+          <div class="panel-head"><div><p class="eyebrow">SPECIALIST ROLES</p><h3>AI workers</h3></div><span class="pill muted">Planned</span></div>
+          <article class="worker"><span class="worker-icon purple">⌕</span><div><b>Researcher</b><small>Find customer problems and evidence</small></div><span class="worker-status">Planned</span></article>
+          <article class="worker"><span class="worker-icon blue">⌘</span><div><b>Builder</b><small>Draft implementation plans and code</small></div><span class="worker-status">Planned</span></article>
+          <article class="worker"><span class="worker-icon green">✓</span><div><b>Quality checker</b><small>Review results and test assumptions</small></div><span class="worker-status">Planned</span></article>
+          <article class="worker"><span class="worker-icon orange">₹</span><div><b>Business operator</b><small>Prepare offers, outreach and reports</small></div><span class="worker-status">Planned</span></article>
+          <div class="notice"><b>Honest status</b><p>These are role placeholders, not running agents. Next: durable storage, a bounded worker runtime, verification, and approval gates.</p></div>
+        </section>
+      </div>
+
+      <section class="panel roadmap" id="roadmap">
+        <div class="panel-head"><div><p class="eyebrow">IMPLEMENTATION PLAN</p><h3>From prototype to real system</h3></div></div>
+        <div class="steps">
+          <article class="step done"><span>01</span><div><b>Control panel</b><small>Interface and local task queue</small></div><i>✓</i></article>
+          <article class="step current"><span>02</span><div><b>Task API + storage</b><small>Durable records and validation</small></div><i>○</i></article>
+          <article class="step"><span>03</span><div><b>Local AI worker</b><small>After disk and hardware checks</small></div><i>○</i></article>
+          <article class="step"><span>04</span><div><b>Orchestration</b><small>Plan → execute → verify → approve</small></div><i>○</i></article>
+        </div>
+      </section>
+      <footer>AI Empire Foundation · Zero-budget-first · Human approval for external actions</footer>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
