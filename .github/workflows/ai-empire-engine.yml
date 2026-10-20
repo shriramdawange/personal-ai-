@@ -11,6 +11,10 @@ on:
       - "ai-empire/engine/**"
       - ".github/workflows/ai-empire-engine.yml"
 
+concurrency:
+  group: ai-empire-engine-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python-checks:
     runs-on: ubuntu-latest
