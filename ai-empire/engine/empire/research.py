@@ -1,3 +1,4 @@
+import re
 from urllib.parse import parse_qs, quote_plus, unquote, urlparse
 import requests
 from bs4 import BeautifulSoup
@@ -39,8 +40,8 @@ def hunt_clients(query: str, limit: int = 10):
             score = 0
             for line in assessment.splitlines():
                 if line.strip().upper().startswith('FIT_SCORE:'):
-                    digits=''.join(c for c in line.split(':',1)[1] if c.isdigit())
-                    if digits: score=max(0,min(100,int(digits)))
+                    match=re.search(r'\b(\d{1,3})\b', line.split(':',1)[1])
+                    if match: score=max(0,min(100,int(match.group(1))))
             name=item['title'][:300]
             for line in assessment.splitlines():
                 if line.strip().upper().startswith('BUSINESS:'):
