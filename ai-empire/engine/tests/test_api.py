@@ -60,6 +60,19 @@ class ApiTests(unittest.TestCase):
         self.assertTrue(response.json()['ollama']['reachable'])
         self.assertTrue(response.json()['ollama']['model_available'])
 
+    def test_model_smoke_test_runs_real_inference_adapter(self):
+        with patch("empire.api.chat", return_value="EMPIRE_MODEL_OK"):
+            response = TestClient(app).post("/system/model-test", json={})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["ok"])
+        self.assertEqual(response.json()["model"], "qwen2.5-coder:3b")
+
+    def test_model_smoke_test_reports_unavailable_model(self):
+        with patch("empire.api.chat", side_effect=RuntimeError("Ollama unavailable")):
+            response = TestClient(app).post("/system/model-test", json={})
+        self.assertEqual(response.status_code, 502)
+        self.assertIn("Ollama unavailable", response.json()["detail"])
+
     def test_remote_bind_requires_strong_token(self):
         from empire.api import verify_access
         with patch.dict(os.environ, {'EMPIRE_API_HOST': '0.0.0.0', 'EMPIRE_API_TOKEN': 'short'}):
