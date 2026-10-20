@@ -20,7 +20,7 @@ This first version uses a local model and has no paid API requirement. Model per
 
 ## Setup (Windows PowerShell)
 
-The repository includes a guarded setup script. It checks disk space first and refuses to download the model if less than 15 GB is free on the current drive.
+The repository includes a guarded setup script. It reuses an already-installed model; before downloading a missing model, it checks the actual Ollama model-storage drive and refuses the download if less than 15 GB is free. It also requires at least 2 GB free on the engine drive for the Python environment and dependencies.
 
 ```powershell
 cd ai-empire\engine
