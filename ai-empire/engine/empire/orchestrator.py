@@ -76,24 +76,49 @@ class Orchestrator:
 
     def serve(self, once=False):
         import os
+        import threading
         print('AI Empire worker started. Stop with Ctrl+C. Local model:', settings.ollama_model)
         recovered = recover_stale_tasks(getattr(settings, "stale_task_minutes", 60))
-        heartbeat_worker("starting", detail=f"Recovered {recovered} abandoned task(s)", pid=os.getpid())
+        worker_state = {"state": "starting", "detail": f"Recovered {recovered} abandoned task(s)"}
+        state_lock = threading.Lock()
+        stop_heartbeat = threading.Event()
+
+        def pulse():
+            while not stop_heartbeat.wait(max(10, settings.poll_seconds * 2)):
+                with state_lock:
+                    state = dict(worker_state)
+                try:
+                    heartbeat_worker(state["state"], detail=state["detail"], pid=os.getpid())
+                except Exception as exc:
+                    print("Worker heartbeat error:", exc)
+
+        heartbeat_worker("starting", detail=worker_state["detail"], pid=os.getpid())
+        pulse_thread = threading.Thread(target=pulse, name="empire-worker-heartbeat", daemon=True)
+        pulse_thread.start()
         try:
             while True:
                 try:
-                    heartbeat_worker("working", detail="Checking task queue", pid=os.getpid())
+                    with state_lock:
+                        worker_state.update(state="working", detail="Checking task queue and processing available work")
+                    heartbeat_worker("working", detail=worker_state["detail"], pid=os.getpid())
                     task = self.run_next()
                     if task:
-                        heartbeat_worker("idle", detail=f"Last task #{task['id']}: {task['status']}", pid=os.getpid())
+                        detail = f"Last task #{task['id']}: {task['status']}"
                         print(f"Task #{task['id']}: {task['status']} {task.get('result_path') or task.get('error') or ''}")
                     else:
-                        heartbeat_worker("idle", detail="No queued tasks", pid=os.getpid())
+                        detail = "No queued tasks"
+                    with state_lock:
+                        worker_state.update(state="idle", detail=detail)
+                    heartbeat_worker("idle", detail=detail, pid=os.getpid())
                 except Exception as exc:
+                    with state_lock:
+                        worker_state.update(state="error", detail=str(exc)[:1000])
                     heartbeat_worker("error", detail=str(exc)[:1000], pid=os.getpid())
                     print('Worker error:', exc)
                 if once:
                     return
                 time.sleep(settings.poll_seconds)
         finally:
+            stop_heartbeat.set()
+            pulse_thread.join(timeout=2)
             heartbeat_worker("stopped", detail="Worker process stopped", pid=os.getpid())
