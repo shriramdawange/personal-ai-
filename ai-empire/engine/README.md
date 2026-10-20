@@ -20,8 +20,16 @@ This first version uses a local model and has no paid API requirement. Model per
 
 ## Setup (Windows PowerShell)
 
+The repository includes a guarded setup script. It checks disk space first and refuses to download the model if less than 15 GB is free on the current drive.
+
 ```powershell
 cd ai-empire\engine
+.\setup.ps1
+```
+
+Manual setup, if preferred:
+
+```powershell
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
