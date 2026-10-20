@@ -100,7 +100,7 @@ python -m empire.cli events 1
 - `GET /projects`, `POST /projects`, `PATCH /projects/{id}/status`
 - `GET /invoices`, `POST /invoices`
 
-Task claiming uses a conditional database update to prevent the API and worker from claiming the same queued task concurrently. Automated tests cover this guard, dashboard serving, model readiness reporting, database lifecycle and existing artifact/research checks.
+Task claiming uses a conditional database update to prevent the API and worker from claiming the same queued task concurrently. The worker persists a heartbeat and reports its state in the dashboard; stale heartbeats are labelled instead of pretending the worker is alive. At worker startup, running tasks older than `EMPIRE_STALE_TASK_MINUTES` (default 60) are marked failed and an audit event is recorded, so they can be retried after inspection. This recovery is deliberately conservative and only runs at worker startup. Automated tests cover this recovery, heartbeat persistence, task claiming, dashboard serving, model readiness reporting, database lifecycle and existing artifact/research checks.
 
 ## Guardrails and limitations
 
